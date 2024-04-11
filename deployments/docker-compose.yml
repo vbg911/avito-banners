@@ -5,11 +5,11 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: example
+      POSTGRES_USER: avito
+      POSTGRES_PASSWORD: avito
       POSTGRES_DB: avito_banner_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
@@ -17,8 +17,8 @@ services:
     image: dpage/pgadmin4
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: avito@example.com
+      PGADMIN_DEFAULT_PASSWORD: avito
     ports:
       - "5050:80"
     volumes:
