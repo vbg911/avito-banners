@@ -34,31 +34,31 @@ func (h *UsersHandler) Banner(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if !lastRevision {
 
-	//todo проверка токена на валидность
-	token := r.Header.Get("token")
-
-	h.Logger.Infof("tag_id: %v, feture_id: %v, use_last_revision: %v, token: %v", tagId, featureId, lastRevision, token)
-
+	}
 	//todo если можно не последнюю ревизию идем в кеш
 
 	jsonResponse, err := storage.GetBanners(h.DB, tagId, featureId)
 	if err != nil {
 		h.Logger.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		http.Error(w, `{"error": "cant get banner from storage"}`, http.StatusInternalServerError)
+		return
 	}
 
 	if jsonResponse == nil {
-		h.Logger.Error("banner not founded")
+		h.Logger.Info("banner not founded")
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsonResponse)
 	if err != nil {
-		h.Logger.Error("W.write err", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.Logger.Error(err.Error())
+		http.Error(w, `{"error": "cant send response"}`, http.StatusInternalServerError)
 		return
 	}
 }

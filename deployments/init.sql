@@ -25,13 +25,13 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.banners (
-    banner_id integer NOT NULL,
-    tag_ids integer[],
-    feature_id integer,
-    content jsonb,
-    is_active boolean,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+                                banner_id integer NOT NULL,
+                                tag_ids integer[],
+                                feature_id integer,
+                                content jsonb,
+                                is_active boolean,
+                                created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+                                updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -74,6 +74,9 @@ COPY public.banners (banner_id, tag_ids, feature_id, content, is_active, created
 1	{1}	1	{"url": "some_url", "text": "some_text", "title": "test_title", "test_field": "13434"}	t	2024-04-11 12:07:08.305734	2024-04-11 12:07:08.305734
 2	{2,3}	2	{"2": "2", "url": "some_url", "text": "some_text", "title": "test title", "test_field": "13434"}	t	2024-04-11 13:08:38.395746	2024-04-11 13:08:38.395746
 3	{1,2,3}	4	{"bar": "baz", "active": false, "balance": 7.77}	t	2024-04-11 16:53:22.909924	2024-04-11 16:53:22.909924
+4	{45}	45	{"bar": "baz", "active": false, "balance": 7.77}	f	2024-04-12 08:16:49.190019	2024-04-12 08:16:49.190019
+6	{0}	0	{"url": "some_url", "text": "some_text", "title": "some_title"}	t	2024-04-12 09:15:41.290035	2024-04-12 15:03:19.952611
+5	{120,0}	0	{"url": "some_url1", "text": "some_text1", "title": "some_title1"}	t	2024-04-12 09:15:28.265048	2024-04-12 09:15:28.265048
 \.
 
 
@@ -81,7 +84,7 @@ COPY public.banners (banner_id, tag_ids, feature_id, content, is_active, created
 -- Name: banners_banner_id_seq; Type: SEQUENCE SET; Schema: public; Owner: avito
 --
 
-SELECT pg_catalog.setval('public.banners_banner_id_seq', 3, true);
+SELECT pg_catalog.setval('public.banners_banner_id_seq', 9, true);
 
 
 --

@@ -4,16 +4,14 @@ import (
 	"avito-backend-assignment/internal/handlers"
 	"avito-backend-assignment/internal/middleware"
 	"database/sql"
-	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	"net/http"
-	"time"
 )
 
+// bombardier -c 100 -n 100000 "http://127.0.0.1:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=0" -H "token:user"
 func main() {
-	fmt.Println(time.Now().String())
 	connStr := "user=avito password=avito dbname=avito_banner_db host=localhost port=5433 sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -43,10 +41,12 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/user_banner", usersHandler.Banner).Methods("GET")
 	r.HandleFunc("/banner", adminsHandler.NewBanner).Methods("POST")
-
-	//mux := middleware.Auth(sm, r)
-	//mux = middleware.AccessLog(logger, mux)
-	muxRouter := middleware.Panic(r)
+	r.HandleFunc("/banner/{id}", adminsHandler.DeleteBanner).Methods("DELETE")
+	r.HandleFunc("/banner/{id}", adminsHandler.UpdateBanner).Methods("PATCH")
+	r.HandleFunc("/banner", adminsHandler.Banner).Methods("GET")
+	muxRouter := middleware.Auth(r)
+	muxRouter = middleware.AccessLog(logger, muxRouter)
+	muxRouter = middleware.Panic(muxRouter)
 
 	addr := ":8080"
 	logger.Infow("starting server",
