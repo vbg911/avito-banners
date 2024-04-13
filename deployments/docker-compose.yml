@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:latest
     restart: always
+    command: -c 'max_connections=500'
     environment:
       POSTGRES_USER: avito
       POSTGRES_PASSWORD: avito

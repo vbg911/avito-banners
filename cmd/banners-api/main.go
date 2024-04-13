@@ -4,6 +4,7 @@ import (
 	"avito-backend-assignment/internal/handlers"
 	"avito-backend-assignment/internal/middleware"
 	"database/sql"
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -13,13 +14,23 @@ import (
 // bombardier -c 100 -n 100000 "http://127.0.0.1:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=0" -H "token:user"
 func main() {
 	connStr := "user=avito password=avito dbname=avito_banner_db host=localhost port=5433 sslmode=disable"
+	MemcachedAddresses := []string{"127.0.0.1:11211"}
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
-
 	// Проверка подключения к базе данных
 	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	memcacheClient := memcache.New(MemcachedAddresses...)
+	err = memcacheClient.Ping()
+	if err != nil {
+		panic(err)
+	}
+	err = memcacheClient.DeleteAll()
 	if err != nil {
 		panic(err)
 	}
@@ -31,11 +42,13 @@ func main() {
 	usersHandler := &handlers.UsersHandler{
 		Logger: logger,
 		DB:     db,
+		MC:     memcacheClient,
 	}
 
 	adminsHandler := &handlers.AdminsHandler{
 		Logger: logger,
 		DB:     db,
+		MC:     memcacheClient,
 	}
 
 	r := mux.NewRouter()

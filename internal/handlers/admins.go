@@ -4,6 +4,7 @@ import (
 	"avito-backend-assignment/internal/storage"
 	"database/sql"
 	"encoding/json"
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"io"
@@ -15,6 +16,7 @@ import (
 type AdminsHandler struct {
 	Logger *zap.SugaredLogger
 	DB     *sql.DB
+	MC     *memcache.Client
 }
 
 type requestBody struct {
