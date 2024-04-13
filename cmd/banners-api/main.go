@@ -4,40 +4,67 @@ import (
 	"avito-backend-assignment/internal/handlers"
 	"avito-backend-assignment/internal/middleware"
 	"database/sql"
+	"fmt"
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
-// bombardier -c 100 -n 100000 "http://127.0.0.1:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=0" -H "token:user"
 func main() {
-	connStr := "user=avito password=avito dbname=avito_banner_db host=localhost port=5433 sslmode=disable"
-	MemcachedAddresses := []string{"127.0.0.1:11211"}
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		panic(err)
-	}
-	// Проверка подключения к базе данных
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
 
-	memcacheClient := memcache.New(MemcachedAddresses...)
-	err = memcacheClient.Ping()
-	if err != nil {
-		panic(err)
-	}
-	err = memcacheClient.DeleteAll()
-	if err != nil {
-		panic(err)
-	}
+	connStr := "user=avito password=avito dbname=avito_banner_db host=postgres port=5432 sslmode=disable"
+	MemcachedAddresses := []string{"memcached:11211"}
 
 	zapLogger, _ := zap.NewProduction()
 	defer zapLogger.Sync()
 	logger := zapLogger.Sugar()
+
+	var db *sql.DB
+	var err error
+	maxAttempts := 10
+
+	// так как postgres в docker compose может быть не готов принимать подключение проверяем его 5 минут
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("postgres", connStr)
+		// Проверка подключения к базе данных
+		err = db.Ping()
+
+		if err == nil {
+			break
+		}
+
+		logger.Infof("Failed to connect to PostgreSQL (attempt %d): %v\n", attempt, err)
+		if attempt == maxAttempts {
+			panic(fmt.Errorf("failed to connect to PostgreSQL after %d attempts: %v", maxAttempts, err))
+		}
+
+		logger.Info("Retrying in 30 seconds...")
+		time.Sleep(30 * time.Second)
+	}
+
+	memcacheClient := memcache.New(MemcachedAddresses...)
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = memcacheClient.Ping()
+		if err == nil {
+			break
+		}
+		logger.Infof("Failed to connect to memcached (attempt %d): %v\n", attempt, err)
+		if attempt == maxAttempts {
+			panic(fmt.Errorf("failed to connect to memcached after %d attempts: %v", maxAttempts, err))
+		}
+
+		logger.Info("Retrying in 15 seconds...")
+		time.Sleep(15 * time.Second)
+	}
+
+	err = memcacheClient.DeleteAll()
+	if err != nil {
+		panic(err)
+	}
 
 	usersHandler := &handlers.UsersHandler{
 		Logger: logger,

@@ -10,9 +10,11 @@ services:
       POSTGRES_PASSWORD: avito
       POSTGRES_DB: avito_banner_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ../pg_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
 
   pgadmin:
     image: dpage/pgadmin4
@@ -23,7 +25,7 @@ services:
     ports:
       - "5050:80"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ../pgadmin_data:/var/lib/pgadmin
 
   memcached:
     image: memcached:latest
@@ -31,6 +33,15 @@ services:
     ports:
       - "11211:11211"
 
+  avito-banner:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - memcached
+    ports:
+      - "8080:8080"
 volumes:
   pg_data:
   pgadmin_data:
